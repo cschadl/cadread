@@ -25,6 +25,7 @@ static const char* LINEAR_DEFLECTION_ARG = "linear_deflection";
 static const char* ANGULAR_DEFLECTION_ARG = "angular_deflection";
 static const char* RELATIVE_ARG = "relative";
 static const char* NO_PARALLEL_ARG = "no_parallel";
+static const char* HELP_ARG = "help";
 
 int main(int argc, char** argv)
 {
@@ -37,7 +38,8 @@ int main(int argc, char** argv)
 		(LINEAR_DEFLECTION_ARG, po::value<double>(&(mesh_params.linear_deflection))->default_value(0.01), "Linear deflection")
 		(ANGULAR_DEFLECTION_ARG, po::value<double>(&(mesh_params.angle_deflection))->default_value(0.5), "Angular deflection")
 		(RELATIVE_ARG, "Use relative discretization during meshing")
-		(NO_PARALLEL_ARG, "Do not use multiple threads for building mesh");
+		(NO_PARALLEL_ARG, "Do not use multiple threads for building mesh")
+		(HELP_ARG, "Print help");
 
 	po::positional_options_description pos_options;
 	pos_options.add(INPUT_FILE_ARG, 1);
@@ -46,6 +48,14 @@ int main(int argc, char** argv)
 	po::variables_map vm;
 	po::store(po::command_line_parser(argc, argv).options(options).positional(pos_options).run(), vm);
 	po::notify(vm);
+
+	if (!vm.count(INPUT_FILE_ARG) || !vm.count(OUTPUT_FILE_ARG) || vm.count("help"))
+	{
+		std::cout << "Usage: " << string(argv[0]) << " <input file> <output file> [options]" << endl;
+		std::cout << options << endl;
+
+		return 0;
+	}
 
 	std::string input_path_str = vm[INPUT_FILE_ARG].as<string>();
 	std::string output_path_str = vm[OUTPUT_FILE_ARG].as<string>();
