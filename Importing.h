@@ -20,14 +20,6 @@ struct brep_mesh_params
 	bool use_relative_discretization;
 	double angle_deflection;
 	bool use_parallel_meshing;
-
-	brep_mesh_params()
-	: linear_deflection(0.001)
-	, use_relative_discretization(false)
-	, angle_deflection(0.5)
-	, use_parallel_meshing(true)
-	{
-	}
 };
 
 namespace cadread
