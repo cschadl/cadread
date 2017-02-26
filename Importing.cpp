@@ -92,7 +92,7 @@ unique_ptr<triangle_mesh> cadread::tessellate_BRep(const TopoDS_Shape& shape, co
 
 	auto mesh = stlutil::make_unique<triangle_mesh>();
 
-	// Get the triangluation of each face, send to mesh
+	// Get the triangulation of each face, send to mesh
 
 	GProp_GProps shape_gprops;
 	BRepGProp::VolumeProperties(shape, shape_gprops);
@@ -101,7 +101,7 @@ unique_ptr<triangle_mesh> cadread::tessellate_BRep(const TopoDS_Shape& shape, co
 	TopExp_Explorer exp_brep_faces(shape.Oriented(is_inside_out ? TopAbs_REVERSED : TopAbs_FORWARD), TopAbs_FACE);
 	for (; exp_brep_faces.More() ; exp_brep_faces.Next())
 	{
-		const TopoDS_Face & face = TopoDS::Face(exp_brep_faces.Current());
+		const TopoDS_Face& face = TopoDS::Face(exp_brep_faces.Current());
 		const bool face_reversed = face.Orientation() != TopAbs_FORWARD;
 
 		TopLoc_Location face_location;
@@ -109,13 +109,13 @@ unique_ptr<triangle_mesh> cadread::tessellate_BRep(const TopoDS_Shape& shape, co
 		if (face_triangulation.IsNull())
 			continue;
 
-		const Poly_Array1OfTriangle & face_triangles = face_triangulation->Triangles();
-		const TColgp_Array1OfPnt & face_nodes = face_triangulation->Nodes();
+		const Poly_Array1OfTriangle& face_triangles = face_triangulation->Triangles();
+		const TColgp_Array1OfPnt& face_nodes = face_triangulation->Nodes();
 
 		for (Standard_Integer i = 1 ; i <= face_triangulation->NbTriangles() ; i++)
 		{
 			Standard_Integer i1, i2, i3;
-			const Poly_Triangle & ft = face_triangles.Value(i);
+			const Poly_Triangle& ft = face_triangles.Value(i);
 			ft.Get(i1, i2, i3);
 
 			gp_Pnt t_p1 = face_nodes.Value(!face_reversed ? i1 : i2).Transformed(face_location);
