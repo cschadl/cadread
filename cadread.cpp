@@ -59,7 +59,7 @@ int main(int argc, char** argv)
 	mesh_params.use_relative_discretization = !!vm.count(RELATIVE_ARG);
 	mesh_params.use_parallel_meshing = !vm.count(NO_PARALLEL_ARG);
 
-	Handle(Message_ProgressIndicator) indicator(new cadread_ConsoleProgressIndicator(0));
+	Handle(Message_ProgressIndicator) indicator(new cadread_ConsoleProgressIndicator(1));
 
 	cad_read_result_t read_result;
 	if (in_ext == ".stp" || in_ext == ".step")

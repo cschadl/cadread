@@ -6,12 +6,12 @@
 class cadread_ConsoleProgressIndicator : public Message_ProgressIndicator
 {
 private:
-	size_t m_precision;
+	int m_precision;
 
 public:
-	cadread_ConsoleProgressIndicator(size_t precision);
+	cadread_ConsoleProgressIndicator(int precision);
 
-	size_t precision() const { return m_precision; }
+	int precision() const { return m_precision; }
 
 	Standard_Boolean Show(const Standard_Boolean force = Standard_True) override;
 };
