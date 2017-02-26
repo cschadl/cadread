@@ -83,7 +83,7 @@ unique_ptr<triangle_mesh> cadread::tessellate_BRep(const TopoDS_Shape& shape, co
 	if (shape.IsNull())
 		return nullptr;
 
-	// have to do it like this for compatibliity between OCCT versions
+	// have to do it like this for compatibility between OCCT versions
 	BRepMesh_IncrementalMesh mesher(shape,
 									params.linear_deflection,
 									params.use_relative_discretization,
