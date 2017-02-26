@@ -3,8 +3,8 @@ MATHSTUFF=$(HOME)/workspace/mathstuff
 STLIMPORT=$(HOME)/workspace/stl-import
 STLUTIL=$(HOME)/workspace/stlutil
 OCCT=/usr/include/oce
-#OCCT=/usr/local/include/opencascade
-#OCCT_LIBDIR=-L /usr/local/lib
+OCCT7=/usr/local/include/opencascade
+OCCT7_LIBDIR=-L /usr/local/lib
 OCCT_LIBDIR=
 INCLUDE=-I $(MATHSTUFF) -I $(STLIMPORT) -I $(STLUTIL) -I $(OCCT)
 CFLAGS=-Wall -O3 -funroll-loops -std=c++11
@@ -50,6 +50,12 @@ $(OUTDIR)/%.o: %.cpp
 	$(CXX) -c $(CFLAGS) $(PKGFLAGS) $(INCLUDE) -o $@ $<
 	$(CXX) -MM $(CFLAGS_DEP) $(PKGFLAGS) $(INCLUDE) $< | perl -pe 's/^\w+\.o:/$(OUTDIR)\/$$&/' > $(OUTDIR)/$*.d
 	
+## Build release using OCCT7 libs
+occt7_release: OCCT=$(OCCT7)
+occt7_release: OCCT_LIBDIR=$(OCCT7_LIBDIR)
+occt7_release: INCLUDE=-I $(MATHSTUFF) -I $(STLIMPORT) -I $(STLUTIL) -I $(OCCT)
+occt7_release: all
+	
 clean:
 	rm -rf $(OUTDIR)/*.o $(OUTEXE) $(OUTDIR)/*.d
 	
@@ -77,6 +83,12 @@ $(addprefix $(OUTDIR_DEBUG)/, $(STLIMPORTOBJS)): $(OUTDIR_DEBUG)/%.o : $(STLIMPO
 $(OUTDIR_DEBUG)/%.o: %.cpp
 	$(CXX) -c $(CFLAGS_DEBUG) $(CPPFLAGS_DEBUG) $(PKGFLAGS) $(INCLUDE) -o $@ $<
 	$(CXX) -MM $(CFLAGS_DEP) $(PKGFLAGS) $(INCLUDE) $< | perl -pe 's/^\w+\.o:/$(OUTDIR_DEBUG)\/$$&/' > $(OUTDIR_DEBUG)/$*.d
+	
+## Build debug using OCCT7 libs
+occt7_debug: OCCT=$(OCCT7)
+occt7_debug: OCCT_LIBDIR=$(OCCT7_LIBDIR)
+occt7_debug: INCLUDE=-I $(MATHSTUFF) -I $(STLIMPORT) -I $(STLUTIL) -I $(OCCT)
+occt7_debug: debug
 
 # This works for some reason
 debug_clean: OUTDIR=Debug

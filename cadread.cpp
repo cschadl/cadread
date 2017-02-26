@@ -11,6 +11,7 @@
 
 #include <TopoDS_Shape.hxx>
 #include <Message_ProgressIndicator.hxx>
+#include <Standard_Version.hxx>
 
 #include "Importing.h"
 #include "cadread_ConsoleProgressIndicator.h"
@@ -51,14 +52,15 @@ int main(int argc, char** argv)
 
 	if (!vm.count(INPUT_FILE_ARG) || !vm.count(OUTPUT_FILE_ARG) || vm.count("help"))
 	{
-		std::cout << "Usage: " << string(argv[0]) << " <input file> <output file> [options]" << endl;
-		std::cout << options << endl;
+		cout << "cadread built with OpenCascade version " << string(OCC_VERSION_COMPLETE) << endl << endl;
+		cout << "Usage: " << string(argv[0]) << " <input file> <output file> [options]" << endl;
+		cout << options << endl;
 
 		return 0;
 	}
 
-	std::string input_path_str = vm[INPUT_FILE_ARG].as<string>();
-	std::string output_path_str = vm[OUTPUT_FILE_ARG].as<string>();
+	string input_path_str = vm[INPUT_FILE_ARG].as<string>();
+	string output_path_str = vm[OUTPUT_FILE_ARG].as<string>();
 
 	fs::path input_path(input_path_str);
 	fs::path output_path(output_path_str);
