@@ -38,7 +38,9 @@ cad_read_result_t read_cad_file(XSControl_Reader& reader, const std::string& fil
 cad_read_result_t ReadSTEP(const std::string& filename, Handle(Message_ProgressIndicator) progress_indicator);
 cad_read_result_t ReadIGES(const std::string& filename, Handle(Message_ProgressIndicator) progress_indicator);
 
-std::unique_ptr<triangle_mesh> tessellate_BRep(const TopoDS_Shape& shape, const brep_mesh_params& params);
+Standard_Real compute_optimal_linear_deflection(const TopoDS_Shape& shape);
+
+std::unique_ptr<triangle_mesh> tessellate_BRep(const TopoDS_Shape& shape, brep_mesh_params params);
 
 };
 #endif

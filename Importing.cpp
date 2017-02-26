@@ -15,8 +15,12 @@
 #include <TopLoc_Location.hxx>
 #include <Poly_Triangulation.hxx>
 #include <BRep_Tool.hxx>
+#include <Bnd_Box.hxx>
+#include <BRepBndLib.hxx>
 
 #include <triangle_mesh.h>
+
+#include <geom.h>
 
 #include <make_unique.h>
 
@@ -78,10 +82,36 @@ cad_read_result_t cadread::ReadIGES(const string& filename, Handle(Message_Progr
 	return res;
 }
 
-unique_ptr<triangle_mesh> cadread::tessellate_BRep(const TopoDS_Shape& shape, const brep_mesh_params& params)
+Standard_Real cadread::compute_optimal_linear_deflection(const TopoDS_Shape& shape)
+{
+	double const default_dev_coef = 1e-3;
+	double const max_chordial_dev = 5000000;
+
+	Bnd_Box occt_bbox;
+	BRepBndLib::Add(shape, occt_bbox);
+
+	if (occt_bbox.IsVoid())
+		return max_chordial_dev;
+
+	double xmin, xmax, ymin, ymax, zmin, zmax;
+	occt_bbox.Get(xmin, xmax, ymin, ymax, zmin, zmax);
+	maths::bbox3d bbox(maths::vector3d(xmin, ymin, zmin), maths::vector3d(xmax, ymax, zmax));
+
+	return bbox.max_extent() * default_dev_coef * 4.0;
+}
+
+unique_ptr<triangle_mesh> cadread::tessellate_BRep(const TopoDS_Shape& shape, brep_mesh_params params)
 {
 	if (shape.IsNull())
 		return nullptr;
+
+	if (params.linear_deflection == 0)
+		params.linear_deflection = compute_optimal_linear_deflection(shape);
+
+	if (params.linear_deflection <= 0)
+		throw std::runtime_error("Bad linear deflection value!");
+	if (params.angle_deflection <= 0)
+		throw std::runtime_error("Bad angular deflection value!");
 
 	// have to do it like this for compatibility between OCCT versions
 	BRepMesh_IncrementalMesh mesher(shape,
