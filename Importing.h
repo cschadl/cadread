@@ -3,6 +3,7 @@
 
 #include <Standard_DefineHandle.hxx>
 #include <Message_ProgressIndicator.hxx>
+#include <TopoDS_Shape.hxx>
 
 #include <string>
 #include <utility>
@@ -31,6 +32,8 @@ cad_read_result_t ReadSTEP(const std::string& filename, Handle(Message_ProgressI
 cad_read_result_t ReadIGES(const std::string& filename, Handle(Message_ProgressIndicator) progress_indicator);
 
 Standard_Real compute_optimal_linear_deflection(const TopoDS_Shape& shape);
+
+TopoDS_Shape heal_BRep(const TopoDS_Shape& shape, Handle(Message_ProgressIndicator) progress_indicator);
 
 std::unique_ptr<triangle_mesh> tessellate_BRep(const TopoDS_Shape& shape, brep_mesh_params params);
 

@@ -9,7 +9,7 @@ OCCT_LIBDIR=
 INCLUDE=-I $(MATHSTUFF) -I $(STLIMPORT) -I $(STLUTIL) -I $(OCCT)
 CFLAGS=-Wall -O3 -funroll-loops -std=c++11
 PKGFLAGS=-pthread
-PKGLIBS=-lTKernel -lTKMath -lTKG2d -lTKBRep -lTKSTEPBase -lTKSTEP -lTKIGES -lTKMesh -lTKTopAlgo -lTKXSBase -lTKG3d -lboost_program_options -lboost_system -lboost_filesystem
+PKGLIBS=-lTKernel -lTKMath -lTKG2d -lTKBRep -lTKSTEPBase -lTKSTEP -lTKIGES -lTKMesh -lTKTopAlgo -lTKXSBase -lTKG3d -lTKShHealing -lboost_program_options -lboost_system -lboost_filesystem
 CFLAGS_DEP=-std=c++11
 OUTDIR=Release
 EXECUTABLE=cadread

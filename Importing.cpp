@@ -7,7 +7,6 @@
 #include <Transfer_TransientProcess.hxx>
 #include <Message_ProgressIndicator.hxx>
 #include <TopoDS.hxx>
-#include <TopoDS_Shape.hxx>
 #include <BRepMesh_IncrementalMesh.hxx>
 #include <TopExp_Explorer.hxx>
 #include <BRepGProp.hxx>
@@ -17,12 +16,17 @@
 #include <BRep_Tool.hxx>
 #include <Bnd_Box.hxx>
 #include <BRepBndLib.hxx>
+#include <ShapeFix_Shape.hxx>
+#include <NCollection_Vector.hxx>
+#include <NCollection_StlIterator.hxx>
 
 #include <triangle_mesh.h>
 
 #include <geom.h>
 
 #include <make_unique.h>
+
+#include <algorithm>
 
 using namespace std;
 
@@ -77,9 +81,47 @@ cad_read_result_t cadread::ReadIGES(const string& filename, Handle(Message_Progr
 	IGESControl_Reader reader;
 	cad_read_result_t res = read_cad_file(reader, filename, progress_indicator);
 
-	// TODO - Heal
+	const TopoDS_Shape& shape = res.second;
+	if (!shape.IsNull())
+		res.second = heal_BRep(shape, progress_indicator);
 
 	return res;
+}
+
+TopoDS_Shape cadread::heal_BRep(const TopoDS_Shape& shape, Handle(Message_ProgressIndicator) indicator)
+{
+	Handle(ShapeFix_Shape) shape_fix(new ShapeFix_Shape);
+	shape_fix->Init(shape);
+
+	NCollection_Vector<TopoDS_Vertex> vertices;
+	TopExp_Explorer exp_vertices(shape, TopAbs_VERTEX);
+	for (; exp_vertices.More() ; exp_vertices.Next())
+		vertices.Append(TopoDS::Vertex(exp_vertices.Current()));
+
+	if (std::distance(vertices.begin(), vertices.end()) < 2)
+		return shape;
+
+	auto minmax_vert_tolerance = std::minmax_element(vertices.begin(), vertices.end(),
+		[](const TopoDS_Vertex& v1, const TopoDS_Vertex& v2)
+		{
+			return BRep_Tool::Tolerance(v1) < BRep_Tool::Tolerance(v2);
+		});
+
+	Standard_Real min_vert_tolerance = BRep_Tool::Tolerance(*minmax_vert_tolerance.first);
+	Standard_Real max_vert_tolerance = BRep_Tool::Tolerance(*minmax_vert_tolerance.second);
+
+	shape_fix->SetMinTolerance(min_vert_tolerance);
+	shape_fix->SetMaxTolerance(max_vert_tolerance);
+
+	if (!indicator.IsNull())
+	{
+		indicator->Reset();
+		indicator->SetScale("Healing", 0, 100, 1);
+	}
+
+	shape_fix->Perform(indicator);
+
+	return shape_fix->Shape();
 }
 
 Standard_Real cadread::compute_optimal_linear_deflection(const TopoDS_Shape& shape)
