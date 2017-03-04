@@ -240,16 +240,15 @@ unique_ptr<triangle_mesh> cadread::tessellate_BRep(const TopoDS_Shape& shape, br
 
 	auto mesh = stlutil::make_unique<triangle_mesh>();
 
-	// Get the triangulation of each face, send to mesh
-
 	GProp_GProps shape_gprops;
 	BRepGProp::VolumeProperties(shape, shape_gprops);
 	bool const is_inside_out = shape_gprops.Mass() < 0.0;
 
-	TopExp_Explorer exp_brep_faces(shape.Oriented(is_inside_out ? TopAbs_REVERSED : TopAbs_FORWARD), TopAbs_FACE);
-	for (; exp_brep_faces.More() ; exp_brep_faces.Next())
+	// Get the triangulation of each face, send to mesh
+	auto faces = brep_utils::get_topo<TopoDS_Face>(shape.Oriented(is_inside_out ? TopAbs_REVERSED : TopAbs_FORWARD));
+
+	for (const TopoDS_Face& face : faces)
 	{
-		const TopoDS_Face& face = TopoDS::Face(exp_brep_faces.Current());
 		const bool face_reversed = face.Orientation() != TopAbs_FORWARD;
 
 		TopLoc_Location face_location;

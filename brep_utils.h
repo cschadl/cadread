@@ -49,7 +49,8 @@ namespace brep_utils
 	};
 
 	template <typename TopoShapeType>
-	auto get_topo(const TopoDS_Shape & s) -> typename std::enable_if<std::is_base_of<TopoDS_Shape, TopoShapeType>::value, NCollection_Vector<TopoShapeType> >::type
+	typename std::enable_if< std::is_base_of<TopoDS_Shape, TopoShapeType>::value, NCollection_Vector<TopoShapeType> >::type
+	get_topo(const TopoDS_Shape & s)
 	{
 		NCollection_Vector<TopoShapeType> shapes;
 		TopExp_Explorer exp_shape(s, shape_traits<TopoShapeType>::shape_type());
