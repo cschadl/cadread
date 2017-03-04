@@ -76,7 +76,7 @@ cad_read_result_t cadread::read_cad_file(XSControl_Reader& reader, const string&
 	if (!indicator.IsNull())
 		indicator->EndScope();
 
-	return make_pair(true, reader.Shape());
+	return make_pair(true, reader.OneShape());
 }
 
 cad_read_result_t cadread::ReadSTEP(const string& filename, Handle(Message_ProgressIndicator) progress_indicator)
