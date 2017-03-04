@@ -1,4 +1,5 @@
 #include "Importing.h"
+#include "brep_utils.h"
 
 #include <STEPControl_Reader.hxx>
 #include <IGESControl_Reader.hxx>
@@ -17,14 +18,22 @@
 #include <Bnd_Box.hxx>
 #include <BRepBndLib.hxx>
 #include <ShapeFix_Shape.hxx>
+#include <ShapeFix_Wire.hxx>
+#include <ShapeAnalysis.hxx>
+#include <BRepCheck_Analyzer.hxx>
 #include <NCollection_Vector.hxx>
 #include <NCollection_StlIterator.hxx>
+#include <TopTools_IndexedMapOfShape.hxx>
+#include <BRepBuilderAPI_MakeFace.hxx>
+#include <Precision.hxx>
+#include <BRepTools_ReShape.hxx>
 
 #include <triangle_mesh.h>
 
 #include <geom.h>
 
 #include <make_unique.h>
+#include <finally.h>
 
 #include <algorithm>
 
@@ -73,7 +82,13 @@ cad_read_result_t cadread::read_cad_file(XSControl_Reader& reader, const string&
 cad_read_result_t cadread::ReadSTEP(const string& filename, Handle(Message_ProgressIndicator) progress_indicator)
 {
 	STEPControl_Reader reader;
-	return read_cad_file(reader, filename, progress_indicator);
+	cad_read_result_t res = read_cad_file(reader, filename, progress_indicator);
+
+	const TopoDS_Shape& shape = res.second;
+	if (!shape.IsNull())
+		res.second = heal_BRep(shape, progress_indicator);
+
+	return res;
 }
 
 cad_read_result_t cadread::ReadIGES(const string& filename, Handle(Message_ProgressIndicator) progress_indicator)
@@ -93,10 +108,7 @@ TopoDS_Shape cadread::heal_BRep(const TopoDS_Shape& shape, Handle(Message_Progre
 	Handle(ShapeFix_Shape) shape_fix(new ShapeFix_Shape);
 	shape_fix->Init(shape);
 
-	NCollection_Vector<TopoDS_Vertex> vertices;
-	TopExp_Explorer exp_vertices(shape, TopAbs_VERTEX);
-	for (; exp_vertices.More() ; exp_vertices.Next())
-		vertices.Append(TopoDS::Vertex(exp_vertices.Current()));
+	auto vertices = brep_utils::get_topo<TopoDS_Vertex>(shape);
 
 	if (std::distance(vertices.begin(), vertices.end()) < 2)
 		return shape;
@@ -117,11 +129,75 @@ TopoDS_Shape cadread::heal_BRep(const TopoDS_Shape& shape, Handle(Message_Progre
 	{
 		indicator->Reset();
 		indicator->SetScale("Healing", 0, 100, 1);
+		indicator->NewScope(50, "Fixing shape");
 	}
 
 	shape_fix->Perform(indicator);
+	TopoDS_Shape fixed_shape = shape_fix->Shape();
 
-	return shape_fix->Shape();
+	if (!indicator.IsNull())
+	{
+		indicator->EndScope();
+		indicator->NewScope(50, "Fixing wires");
+	}
+
+	BRepTools_ReShape reshaper;
+	for (const TopoDS_Face& face : brep_utils::get_topo<TopoDS_Face>(fixed_shape))
+	{
+		stlutil::finally f([&indicator]() { indicator->Increment(); });
+
+		BRepCheck_Analyzer face_analyzer(face);
+		if (face_analyzer.IsValid())
+			continue;
+
+		TopoDS_Wire outer_loop = ShapeAnalysis::OuterWire(face);
+		TopTools_IndexedMapOfShape shape_map;
+		shape_map.Add(outer_loop);
+
+		auto wires = brep_utils::get_topo<TopoDS_Wire>(face);
+
+		ShapeFix_Wire fix_wire;
+		fix_wire.SetFace(face);
+		fix_wire.Load(outer_loop);
+		fix_wire.Perform();
+
+		BRepBuilderAPI_MakeFace make_face(fix_wire.WireAPIMake());
+
+		for (const TopoDS_Wire& wire : wires)
+		{
+			if (!shape_map.Contains(wire))
+			{
+				fix_wire.Load(wire);
+				fix_wire.Perform();
+
+				make_face.Add(fix_wire.WireAPIMake());
+			}
+		}
+
+		auto mk_face = make_face.Face();
+		if (mk_face.IsNull())
+			continue;
+
+		face_analyzer.Init(make_face.Face());
+		if (face_analyzer.IsValid())
+		{
+			reshaper.Apply(make_face.Face());
+			continue;
+		}
+
+		ShapeFix_Shape fix(make_face.Face());
+		fix.SetPrecision(Precision::Confusion());
+		fix.SetMinTolerance(Precision::Confusion());
+		fix.SetMaxTolerance(Precision::Confusion());
+
+		fix.Perform();
+		fix.FixWireTool()->Perform();
+		fix.FixFaceTool()->Perform();
+
+		fixed_shape = reshaper.Apply(fix.Shape());
+	}
+
+	return fixed_shape;
 }
 
 Standard_Real cadread::compute_optimal_linear_deflection(const TopoDS_Shape& shape)
