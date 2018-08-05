@@ -1,7 +1,7 @@
 CXX=g++
-MATHSTUFF=$(HOME)/workspace/mathstuff
-STLIMPORT=$(HOME)/workspace/stl-import
-STLUTIL=$(HOME)/workspace/stlutil
+MATHSTUFF=../mathstuff
+STLIMPORT=../stl-import
+STLUTIL=../stlutil
 OCCT=/usr/include/oce
 OCCT7=/usr/local/include/opencascade
 OCCT7_LIBDIR=-L /usr/local/lib
