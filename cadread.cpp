@@ -4,6 +4,10 @@
 #include <memory>
 #include <fstream>
 
+// for M_PI
+#undef __STRICT_ANSI__
+#include <cmath>
+
 #include <triangle_mesh.h>
 
 #include <boost/program_options.hpp>
@@ -22,22 +26,31 @@ namespace fs = boost::filesystem;
 
 static const char* INPUT_FILE_ARG = "input_file";
 static const char* OUTPUT_FILE_ARG = "output_file";
-static const char* LINEAR_DEFLECTION_ARG = "linear_deflection";
-static const char* ANGULAR_DEFLECTION_ARG = "angular_deflection";
+static const char* LINEAR_DEFLECTION_ARG = "linear_deflection,d";
+static const char* ANGULAR_DEFLECTION_ARG = "angular_deflection,a";
 static const char* RELATIVE_ARG = "relative";
 static const char* NO_PARALLEL_ARG = "no_parallel";
 static const char* HELP_ARG = "help";
+
+double deg_to_rad(double r)
+{
+	return r * M_PI / 180.0;
+}
 
 int main(int argc, char** argv)
 {
 	brep_mesh_params mesh_params;
 
+	double angular_deflection_deg;
+
 	po::options_description options("Options");
 	options.add_options()
 		(INPUT_FILE_ARG, po::value<string>(), "Input CAD file")
 		(OUTPUT_FILE_ARG, po::value<string>(), "Output STL file")
-		(LINEAR_DEFLECTION_ARG, po::value<double>(&(mesh_params.linear_deflection))->default_value(0), "Linear deflection, 0 automatically computes value")
-		(ANGULAR_DEFLECTION_ARG, po::value<double>(&(mesh_params.angle_deflection))->default_value(0.5), "Angular deflection")
+		(LINEAR_DEFLECTION_ARG, po::value<double>(&(mesh_params.linear_deflection))->default_value(0), 
+		 								"Linear deflection, 0 automatically computes value")
+		(ANGULAR_DEFLECTION_ARG, po::value<double>(&angular_deflection_deg)->default_value(30), 
+		 								 "Angular deflection in degrees")
 		(RELATIVE_ARG, "Use relative discretization during meshing")
 		(NO_PARALLEL_ARG, "Do not use multiple threads for building mesh")
 		(HELP_ARG, "Print help");
@@ -68,6 +81,7 @@ int main(int argc, char** argv)
 	string in_ext = input_path.extension().string();
 	transform(in_ext.begin(), in_ext.end(), in_ext.begin(), ::tolower);
 
+	mesh_params.angle_deflection_rad = ::deg_to_rad(angular_deflection_deg);
 	mesh_params.use_relative_discretization = !!vm.count(RELATIVE_ARG);
 	mesh_params.use_parallel_meshing = !vm.count(NO_PARALLEL_ARG);
 

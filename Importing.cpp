@@ -228,14 +228,14 @@ unique_ptr<triangle_mesh> cadread::tessellate_BRep(const TopoDS_Shape& shape, br
 
 	if (params.linear_deflection <= 0)
 		throw std::runtime_error("Bad linear deflection value!");
-	if (params.angle_deflection <= 0)
+	if (params.angle_deflection_rad <= 0)
 		throw std::runtime_error("Bad angular deflection value!");
 
 	// have to do it like this for compatibility between OCCT versions
 	BRepMesh_IncrementalMesh mesher(shape,
 									params.linear_deflection,
 									params.use_relative_discretization,
-									params.angle_deflection,
+									params.angle_deflection_rad,
 									params.use_parallel_meshing);
 
 	auto mesh = stlutil::make_unique<triangle_mesh>();
