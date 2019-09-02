@@ -1,2 +1,6 @@
 # Ignore eclipse settings
 .settings
+.cproject
+.*.swp
+Debug/
+Release/
