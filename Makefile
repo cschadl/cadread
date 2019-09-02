@@ -7,10 +7,10 @@ OCCT7=/usr/local/include/opencascade
 OCCT7_LIBDIR=-L /usr/local/lib
 OCCT_LIBDIR=
 INCLUDE=-I $(MATHSTUFF) -I $(STLIMPORT) -I $(STLUTIL) -I $(OCCT)
-CFLAGS=-Wall -O3 -funroll-loops -std=c++11
+CFLAGS=-Wall -O3 -funroll-loops -std=c++17
 PKGFLAGS=-pthread
 PKGLIBS=-lTKernel -lTKMath -lTKG2d -lTKBRep -lTKSTEPBase -lTKSTEP -lTKIGES -lTKMesh -lTKTopAlgo -lTKXSBase -lTKG3d -lTKShHealing -lboost_program_options -lboost_system -lboost_filesystem
-CFLAGS_DEP=-std=c++11
+CFLAGS_DEP=-std=c++17
 OUTDIR=Release
 EXECUTABLE=cadread
 
@@ -26,7 +26,7 @@ OUTEXE=$(OUTDIR)/$(EXECUTABLE)
 OUTDIR_DEBUG=Debug
 OUTOBJS_DEBUG=$(addprefix $(OUTDIR_DEBUG)/, $(OBJS))
 OUTEXE_DEBUG=$(OUTDIR_DEBUG)/$(EXECUTABLE)
-CFLAGS_DEBUG=-Wall -ggdb3 -std=c++11
+CFLAGS_DEBUG=-Wall -ggdb3 -std=c++17
 CPPFLAGS_DEBUG=-DDEBUG
 
 ################################
