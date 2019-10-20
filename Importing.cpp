@@ -32,10 +32,11 @@
 
 #include <geom.h>
 
-#include <make_unique.h>
-#include <finally.h>
+#include <stlutil/make_unique.h>
+#include <stlutil/finally.h>
 
 #include <algorithm>
+#include <memory>
 
 using namespace std;
 
@@ -238,7 +239,7 @@ unique_ptr<triangle_mesh> cadread::tessellate_BRep(const TopoDS_Shape& shape, br
 									params.angle_deflection_rad,
 									params.use_parallel_meshing);
 
-	auto mesh = stlutil::make_unique<triangle_mesh>();
+	auto mesh = std::make_unique<triangle_mesh>();
 
 	GProp_GProps shape_gprops;
 	BRepGProp::VolumeProperties(shape, shape_gprops);
