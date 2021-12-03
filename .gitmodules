@@ -1,0 +1,3 @@
+[submodule "stl-import"]
+	path = stl-import
+	url = git@github.com:cschadl/stl-import.git
