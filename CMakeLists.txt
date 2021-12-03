@@ -9,12 +9,15 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 find_package(OCC REQUIRED)
 find_package(Boost REQUIRED COMPONENTS program_options system filesystem)
+find_package(Eigen3 REQUIRED)
 
 if (UNIX)
     find_library(FreeType REQUIRED)
     find_path(FONTCONFIG_INCLUDE_DIRS "fontconfig/fontconfig.h")
 endif(UNIX)
 
+set(BUILD_STATIC ON CACHE BOOL "")
+set(BUILD_TESTS OFF CACHE BOOL "")
 set(STLIMPORT_PATH ${CMAKE_SOURCE_DIR}/stl-import CACHE STRING "path to stl-import")
 set(MATHSTUFF_PATH ${STLIMPORT_PATH}/submodules/mathstuff CACHE STRING "")
 set(STLUTIL_PATH ${STLIMPORT_PATH}/submodules/stlutil CACHE STRING "")
