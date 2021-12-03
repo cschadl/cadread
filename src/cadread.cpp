@@ -24,13 +24,13 @@ using namespace std;
 namespace po = boost::program_options;
 namespace fs = boost::filesystem;
 
-static const char* INPUT_FILE_ARG = "input_file";
-static const char* OUTPUT_FILE_ARG = "output_file";
-static const char* LINEAR_DEFLECTION_ARG = "linear_deflection,d";
-static const char* ANGULAR_DEFLECTION_ARG = "angular_deflection,a";
-static const char* RELATIVE_ARG = "relative";
-static const char* NO_PARALLEL_ARG = "no_parallel";
-static const char* HELP_ARG = "help";
+#define INPUT_FILE_ARG "input-file"
+#define OUTPUT_FILE_ARG "output-file"
+#define LINEAR_DEFLECTION_ARG "linear-deflection"
+#define ANGULAR_DEFLECTION_ARG "angular-deflection"
+#define RELATIVE_ARG "relative"
+#define NO_PARALLEL_ARG "no-parallel"
+#define HELP_ARG "help"
 
 double deg_to_rad(double r)
 {
@@ -45,22 +45,26 @@ int main(int argc, char** argv)
 
 	po::options_description options("Options");
 	options.add_options()
-		(INPUT_FILE_ARG, po::value<string>(), "Input CAD file")
-		(OUTPUT_FILE_ARG, po::value<string>(), "Output STL file")
-		(LINEAR_DEFLECTION_ARG, po::value<double>(&(mesh_params.linear_deflection))->default_value(0), 
+		(INPUT_FILE_ARG",i", po::value<string>(), "Input CAD file")
+		(OUTPUT_FILE_ARG",o", po::value<string>(), "Output STL file")
+		(LINEAR_DEFLECTION_ARG",d", po::value<double>(&(mesh_params.linear_deflection))->default_value(0), 
 		 								"Linear deflection, 0 automatically computes value")
-		(ANGULAR_DEFLECTION_ARG, po::value<double>(&angular_deflection_deg)->default_value(30), 
+		(ANGULAR_DEFLECTION_ARG",a", po::value<double>(&angular_deflection_deg)->default_value(30), 
 		 								 "Angular deflection in degrees")
 		(RELATIVE_ARG, "Use relative discretization during meshing")
 		(NO_PARALLEL_ARG, "Do not use multiple threads for building mesh")
-		(HELP_ARG, "Print help");
+		(HELP_ARG",h", "Print help");
 
 	po::positional_options_description pos_options;
 	pos_options.add(INPUT_FILE_ARG, 1);
-	pos_options.add(OUTPUT_FILE_ARG, 1);
 
 	po::variables_map vm;
-	po::store(po::command_line_parser(argc, argv).options(options).positional(pos_options).run(), vm);
+	po::store(
+		po::command_line_parser(argc, argv)
+			.options(options)
+			.positional(pos_options)
+			.run(),
+		vm);
 	po::notify(vm);
 
 	if (!vm.count(INPUT_FILE_ARG) || !vm.count(OUTPUT_FILE_ARG) || vm.count("help"))
