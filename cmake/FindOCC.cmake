@@ -49,7 +49,7 @@ set(OCC_LIBRARIES_DATA_EXCHANGE
   TKSTL
   TKVRML
   TKXCAF
-  TKXCAFSchema
+# TKXCAFSchema # only used in OCE (OpenCascade 6.9.x)
   TKXDEIGES
   TKXDESTEP
   TKXSBase
