@@ -9,15 +9,24 @@
 #  OCC_VERSION - the OCC version
 #  OCC_INCLUDE_DIR - the OCC include dir
 #  OCC_LIBRARY_DIR - the OCC library directory
-#  OCC_LIBRARIES (not cached) - full path of OCC libraries
+#  OCC_LIBRARIES - full path of OCC libraries
 
-set(_occdirs ${CASROOT} ${CASS_DIR} $ENV{CASROOT})
+if (NOT CASROOT)
+  find_path(OCC_INCLUDE_DIR
+            NAMES Standard_Version.hxx
+            PATH_SUFFIXES opencascade
+            NO_CACHE
+            DOC "Specify the directory containing Standard_Version.hxx")
+else()
+  find_path(OCC_INCLUDE_DIR
+    NAMES Standard_Version.hxx
+    PATHS ${CASROOT} "${CASROOT}/include"
+    PATH_SUFFIXES opencascade
+    NO_DEFAULT_PATH
+    NO_CACHE
+    DOC "Specify the directory containing Standard_Version.hxx")
+endif()
 
-find_path(OCC_INCLUDE_DIR
-          NAMES Standard_Version.hxx
-          HINTS ${_occdirs}
-          PATH_SUFFIXES opencascade
-          DOC "Specify the directory containing Standard_Version.hxx")
 
 file(READ "${OCC_INCLUDE_DIR}/Standard_Version.hxx" _standard_ver)
 string(REGEX MATCH "OCC_VERSION_MAJOR[ ]+([0-9]+)" _ "${_standard_ver}")
@@ -39,13 +48,15 @@ set(OCC_LIBRARIES_FOUNDATION
   TKernel
 )
 
+set(OCC_LIBRARIES "")
 foreach (OCC_LIB ${OCC_LIBRARIES_FOUNDATION})
-  if (NOT OCC_LIBRARY_DIR)
-    find_library(OCC_${OCC_LIB} NAMES ${OCC_LIB} PATHS ${_occdirs})
+  if (NOT CASROOT)
+    find_library(OCC_${OCC_LIB} NAMES ${OCC_LIB} PATHS} NO_CACHE)
   else()
-    find_library(OCC_${OCC_LIB} NAMES ${OCC_LIB} PATHS ${OCC_LIBRARY_DIR} NO_DEFAULT_PATH)
+    find_library(OCC_${OCC_LIB} NAMES ${OCC_LIB} PATHS ${CASROOT} PATH_SUFFIXES lib bin NO_DEFAULT_PATH)
   endif()
   list(APPEND OCC_LIBRARIES "${OCC_${OCC_LIB}}")
+  mark_as_advanced("${OCC_${OCC_LIB}}")
 endforeach()
 
 get_filename_component(OCC_LIBRARY_DIR "${OCC_TKernel}" DIRECTORY)
@@ -58,8 +69,9 @@ set(OCC_LIBRARIES_MODELING_DATA
 )
 
 foreach (OCC_LIB ${OCC_LIBRARIES_MODELING_DATA})
-  find_library(OCC_${OCC_LIB} NAMES ${OCC_LIB} PATHS ${OCC_LIBRARY_DIR})
+  find_library(OCC_${OCC_LIB} NAMES ${OCC_LIB} PATHS ${OCC_LIBRARY_DIR} NO_CACHE NO_DEFAULT_PATH)
   list(APPEND OCC_LIBRARIES "${OCC_${OCC_LIB}}")
+  mark_as_advanced("${OCC_${OCC_LIB}}")
 endforeach()
 
 set(OCC_LIBRARIES_DATA_EXCHANGE
@@ -80,8 +92,9 @@ set(OCC_LIBRARIES_DATA_EXCHANGE
 )
 
 foreach (OCC_LIB ${OCC_LIBRARIES_DATA_EXCHANGE})
-  find_library(OCC_${OCC_LIB} NAMES ${OCC_LIB} PATHS ${OCC_LIBRARY_DIR})
+  find_library(OCC_${OCC_LIB} NAMES ${OCC_LIB} PATHS ${OCC_LIBRARY_DIR} NO_CACHE NO_DEFAULT_PATH)
   list(APPEND OCC_LIBRARIES "${OCC_${OCC_LIB}}")
+  mark_as_advanced("${OCC_${OCC_LIB}}")
 endforeach()
 
 set(OCC_LIBRARIES_MODELING_ALGO
@@ -100,8 +113,9 @@ set(OCC_LIBRARIES_MODELING_ALGO
 )
 
 foreach (OCC_LIB ${OCC_LIBRARIES_MODELING_ALGO})
-  find_library(OCC_${OCC_LIB} NAMES ${OCC_LIB} PATHS ${OCC_LIBRARY_DIR})
+  find_library(OCC_${OCC_LIB} NAMES ${OCC_LIB} PATHS ${OCC_LIBRARY_DIR} NO_CACHE NO_DEFAULT_PATH)
   list(APPEND OCC_LIBRARIES "${OCC_${OCC_LIB}}")
+  mark_as_advanced("${OCC_${OCC_LIB}}")
 endforeach()
 
 # handle the QUIETLY and REQUIRED arguments and set OCC_FOUND to TRUE if
