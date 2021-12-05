@@ -27,6 +27,11 @@
 #include <BRepBuilderAPI_MakeFace.hxx>
 #include <Precision.hxx>
 #include <BRepTools_ReShape.hxx>
+#include <StepRepr_Representation.hxx>
+#include <StepShape_ConnectedFaceSet.hxx>
+#include <StepShape_AdvancedFace.hxx>
+#include <StepShape_ManifoldSolidBrep.hxx>
+#include <StepShape_Face.hxx>
 
 #include <triangle_mesh.h>
 
@@ -58,6 +63,50 @@ cad_read_result_t cadread::read_cad_file(XSControl_Reader& reader, const string&
 	if (!indicator.IsNull())
 		indicator->EndScope();
 
+	// Try to read entity names from the model
+	Handle(XSControl_WorkSession) ws = reader.WS();
+	Handle(Interface_InterfaceModel) model = ws->Model();
+
+	auto nEntities = model->NbEntities();
+	for (Standard_Integer i = 1 ; i <= nEntities ; i++)
+	{
+		auto entity = model->Value(i);
+		auto stepEntity = Handle(StepRepr_Representation)::DownCast(entity);
+		if (!stepEntity.IsNull())
+		{
+			if (!stepEntity->Name().IsNull())
+				std::cout << "Got entity " << stepEntity->get_type_name() 
+					<< " name " << stepEntity->Name()->ToCString() << std::endl;
+
+			for (auto j = 1 ; j <= stepEntity->NbItems() ; j++)
+			{
+				auto stepReprItem = stepEntity->ItemsValue(j);
+				if (!stepReprItem->Name().IsNull())
+					std::cout << "\tGot item " << stepReprItem->get_type_name() 
+						<< " name " << stepReprItem->Name()->ToCString() << std::endl;	
+
+				// If this is a solid then get the faces
+				auto manifoldSolidBrep = 
+					Handle(StepShape_ManifoldSolidBrep)::DownCast(stepReprItem);
+
+				if (!manifoldSolidBrep.IsNull())
+				{
+					auto outerFaceSet = manifoldSolidBrep->Outer();
+					
+					for (Standard_Integer k = 1 ; k < outerFaceSet->NbCfsFaces() ; k++)
+					{
+						auto face = outerFaceSet->CfsFacesValue(k);
+						if (!face->Name().IsNull())
+						{
+							std::cout << "\tGot face " << face->get_type_name()
+								<< " name " << face->Name()->ToCString() << std::endl;
+						}
+					}
+				}
+			}
+		}
+	}
+
 	if (res != IFSelect_RetDone)
 	{
 		return make_pair(false, TopoDS_Shape());
@@ -65,7 +114,6 @@ cad_read_result_t cadread::read_cad_file(XSControl_Reader& reader, const string&
 
 	if (!indicator.IsNull())
 	{
-		auto ws = reader.WS();
 		ws->TransferReader()->TransientProcess()->SetProgress(indicator);
 
 		indicator->NewScope(80, "Importing");
