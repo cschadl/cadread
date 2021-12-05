@@ -29,13 +29,13 @@ endif()
 
 
 file(READ "${OCC_INCLUDE_DIR}/Standard_Version.hxx" _standard_ver)
-string(REGEX MATCH "OCC_VERSION_MAJOR[ ]+([0-9]+)" _ "${_standard_ver}")
+string(REGEX MATCH "OCC_VERSION_MAJOR[ \t]+([0-9]+)" _ "${_standard_ver}")
 set(OCC_VER_MAJOR ${CMAKE_MATCH_1})
 
-string(REGEX MATCH "OCC_VERSION_MINOR[ ]+([0-9]+)" _ "${_standard_ver}")
+string(REGEX MATCH "OCC_VERSION_MINOR[ \t]+([0-9]+)" _ "${_standard_ver}")
 set(OCC_VER_MINOR ${CMAKE_MATCH_1})
 
-string(REGEX MATCH "OCC_VERSION_MAINTENANCE[ ]+([0-9]+)" _ "${_standard_ver}")
+string(REGEX MATCH "OCC_VERSION_MAINTENANCE[ \t]+([0-9]+)" _ "${_standard_ver}")
 set(OCC_VER_MAINTENANCE ${CMAKE_MATCH_1})
 
 set(OCC_VERSION "${OCC_VER_MAJOR}.${OCC_VER_MINOR}.${OCC_VER_MAINTENANCE}")
