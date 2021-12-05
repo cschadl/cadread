@@ -75,15 +75,15 @@ cad_read_result_t cadread::read_cad_file(XSControl_Reader& reader, const string&
 		if (!stepEntity.IsNull())
 		{
 			if (!stepEntity->Name().IsNull())
-				std::cout << "Got entity " << stepEntity->get_type_name() 
-					<< " name " << stepEntity->Name()->ToCString() << std::endl;
+				std::cout << "Got entity " << stepEntity->DynamicType()->Name()
+					<< " name \"" << stepEntity->Name()->ToCString() << "\"" << std::endl;
 
 			for (auto j = 1 ; j <= stepEntity->NbItems() ; j++)
 			{
 				auto stepReprItem = stepEntity->ItemsValue(j);
 				if (!stepReprItem->Name().IsNull())
-					std::cout << "\tGot item " << stepReprItem->get_type_name() 
-						<< " name " << stepReprItem->Name()->ToCString() << std::endl;	
+					std::cout << "\tGot item " << stepReprItem->DynamicType()->Name()
+						<< " name \"" << stepReprItem->Name()->ToCString() << "\"" << std::endl;	
 
 				// If this is a solid then get the faces
 				auto manifoldSolidBrep = 
@@ -98,8 +98,8 @@ cad_read_result_t cadread::read_cad_file(XSControl_Reader& reader, const string&
 						auto face = outerFaceSet->CfsFacesValue(k);
 						if (!face->Name().IsNull())
 						{
-							std::cout << "\tGot face " << face->get_type_name()
-								<< " name " << face->Name()->ToCString() << std::endl;
+							std::cout << "\t\tGot face " << face->DynamicType()->Name()
+								<< " name \"" << face->Name()->ToCString() << "\"" << std::endl;
 						}
 					}
 				}
