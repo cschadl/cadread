@@ -27,6 +27,7 @@ set(CADREAD_SRC
     src/cadread_ConsoleProgressIndicator.cpp
     src/cadread.cpp
     src/Importing.cpp
+    src/Exporting.cpp
 )
 
 add_executable("cadread" ${CADREAD_SRC})

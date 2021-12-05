@@ -328,25 +328,3 @@ unique_ptr<triangle_mesh> cadread::tessellate_BRep(const TopoDS_Shape& shape, br
 
 	return mesh;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

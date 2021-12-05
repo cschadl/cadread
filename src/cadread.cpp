@@ -7,22 +7,23 @@
 // for M_PI
 #undef __STRICT_ANSI__
 #include <cmath>
+#include <filesystem>
 
 #include <triangle_mesh.h>
 
 #include <boost/program_options.hpp>
-#include <boost/filesystem.hpp>
 
 #include <TopoDS_Shape.hxx>
 #include <Message_ProgressIndicator.hxx>
 #include <Standard_Version.hxx>
 
 #include "Importing.h"
+#include "Exporting.h"
 #include "cadread_ConsoleProgressIndicator.h"
 
 using namespace std;
 namespace po = boost::program_options;
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 
 #define INPUT_FILE_ARG "input-file"
 #define OUTPUT_FILE_ARG "output-file"
@@ -115,23 +116,37 @@ int main(int argc, char** argv)
 		return 1;
 	}
 
-	unique_ptr<triangle_mesh> mesh = cadread::tessellate_BRep(brep, mesh_params);
-	if (!mesh)
-	{
-		cout << "Error creating mesh from BRep!" << endl;
-		return 1;
-	}
+	auto output_ext = output_path.extension().string();
+	std::transform(output_ext.begin(), output_ext.end(), output_ext.begin(), ::tolower);
 
-	// Just write a ASCII STL file for now...
-	ofstream out_stream;
-	out_stream.open(output_path.string().c_str(), ios::out | ios::trunc);
-	if (!out_stream.good())
+	if (output_ext == ".stl")
 	{
-		cout << "Error opening output stream" << endl;
-		return 1;
-	}
+		unique_ptr<triangle_mesh> mesh = cadread::tessellate_BRep(brep, mesh_params);
+		if (!mesh)
+		{
+			cout << "Error creating mesh from BRep!" << endl;
+			return 1;
+		}
 
-	out_stream << *mesh;
+		// Just write a ASCII STL file for now...
+		ofstream out_stream;
+		out_stream.open(output_path.string().c_str(), ios::out | ios::trunc);
+		if (!out_stream.good())
+		{
+			cout << "Error opening output stream" << endl;
+			return 1;
+		}
+
+		out_stream << *mesh;
+	}
+	else if (output_ext == ".stp" || output_ext == ".step")
+	{
+		if (!cadread::ExportSTEP(brep, output_path))
+		{
+			std::cerr << "Error exporting STEP file" << std::endl;
+			return 1;
+		}
+	}
 
 	cout << "Done!" << endl;
 
