@@ -32,6 +32,13 @@
 #include <StepShape_AdvancedFace.hxx>
 #include <StepShape_ManifoldSolidBrep.hxx>
 #include <StepShape_Face.hxx>
+#include <TDocStd_Document.hxx>
+#include <XCAFDoc_DocumentTool.hxx>
+#include <XCAFDoc_ShapeTool.hxx>
+#include <TDF_LabelSequence.hxx>
+#include <TDF_Label.hxx>
+#include <TDataStd.hxx>
+#include <TDataStd_Name.hxx>
 
 #include <triangle_mesh.h>
 
@@ -150,6 +157,34 @@ cad_read_result_t cadread::ReadIGES(const string& filename, Handle(Message_Progr
 		res.second = heal_BRep(shape, progress_indicator);
 
 	return res;
+}
+
+void cadread::TagFaces(Handle(TDocStd_Document) doc)
+{
+	auto shape_tool = XCAFDoc_DocumentTool::ShapeTool(doc->Main());
+	
+	TDF_LabelSequence shapeLabels;
+	shape_tool->GetFreeShapes(shapeLabels);
+
+	int i = 0;
+	for (TDF_Label & label : shapeLabels)
+	{
+		TopoDS_Shape S;
+		TDF_Label S_Label = shape_tool->FindShape(S);
+		if (S_Label.IsNull())
+			continue;
+
+		auto faces = brep_utils::get_topo<TopoDS_Face>(S);
+		for (TopoDS_Face & f : faces)
+		{
+			TDF_Label fLabel = shape_tool->AddSubShape(S_Label, f);
+
+			std::ostringstream oss;
+			oss << "face_" << (i++);
+
+			TDataStd_Name::Set(fLabel, oss.str().c_str());
+		}
+	}
 }
 
 TopoDS_Shape cadread::heal_BRep(const TopoDS_Shape& shape, Handle(Message_ProgressIndicator) indicator)

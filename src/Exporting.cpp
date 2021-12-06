@@ -1,4 +1,5 @@
 #include "Exporting.h"
+#include "brep_utils.h"
 
 #include <string>
 #include <sstream>
@@ -17,6 +18,8 @@
 #include <StepShape_Face.hxx>
 #include <StepShape_ConnectedFaceSet.hxx>
 #include <TCollection_HAsciiString.hxx>
+#include <TDF_Label.hxx>
+#include <TDF_LabelSequence.hxx>
 
 bool cadread::ExportSTEP(TopoDS_Shape const& shape, std::filesystem::path const& out_path)
 {
@@ -72,4 +75,34 @@ bool cadread::ExportSTEP(TopoDS_Shape const& shape, std::filesystem::path const&
     auto write_staus = writer.Write(out_path.c_str());
 
     return write_staus == IFSelect_ReturnStatus::IFSelect_RetDone;
+}
+
+bool cadread::ExportSTEPXDE(Handle(TDocStd_Document) doc, std::filesystem::path const& out_path)
+{
+    if (!XCAFDoc_DocumentTool::IsXCAFDocument(doc))
+    {
+        std::cerr << "Document must be an XCAF doc" << std::endl;
+        return false;
+    }
+
+    auto shape_tool = XCAFDoc_DocumentTool::ShapeTool(doc->Main());
+
+    Handle(XSControl_WorkSession) WS(new XSControl_WorkSession);
+    STEPCAFControl_Writer writer;
+
+    writer.Transfer(doc);
+
+    TDF_LabelSequence shapeLabels;
+	shape_tool->GetFreeShapes(shapeLabels);
+
+    
+
+    for (TDF_Label const& label_S : shapeLabels)
+    {
+        TopoDS_Shape S = shape_tool->GetShape(label_S);
+        for (TopoDS_Face const& f : brep_utils::get_topo<TopoDS_Face>(S))
+        {
+
+        }
+    }
 }
