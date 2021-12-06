@@ -17,9 +17,15 @@
 #include <StepShape_ManifoldSolidBrep.hxx>
 #include <StepShape_Face.hxx>
 #include <StepShape_ConnectedFaceSet.hxx>
+#include <StepRepr_RepresentationItem.hxx>
 #include <TCollection_HAsciiString.hxx>
 #include <TDF_Label.hxx>
 #include <TDF_LabelSequence.hxx>
+#include <Transfer_FinderProcess.hxx>
+#include <TransferBRep.hxx>
+#include <TransferBRep_ShapeMapper.hxx>
+#include <TDataStd_Name.hxx>
+#include <TDF_Attribute.hxx>
 
 bool cadread::ExportSTEP(TopoDS_Shape const& shape, std::filesystem::path const& out_path)
 {
@@ -95,14 +101,30 @@ bool cadread::ExportSTEPXDE(Handle(TDocStd_Document) doc, std::filesystem::path 
     TDF_LabelSequence shapeLabels;
 	shape_tool->GetFreeShapes(shapeLabels);
 
-    
+    auto fp = WS->TransferWriter()->FinderProcess();
 
     for (TDF_Label const& label_S : shapeLabels)
     {
         TopoDS_Shape S = shape_tool->GetShape(label_S);
+        auto shapeMapper = TransferBRep::ShapeMapper(fp, S);
+
         for (TopoDS_Face const& f : brep_utils::get_topo<TopoDS_Face>(S))
         {
+            TDF_Label f_label = shape_tool->FindShape(f);
 
+            Handle(StepRepr_RepresentationItem) faceItem;
+            if (!f_label.IsNull() && 
+                fp->FindTypedTransient(
+                    shapeMapper, STANDARD_TYPE(StepRepr_RepresentationItem), faceItem))
+            {
+                Handle(TDataStd_Name) nameAttr(new TDataStd_Name);
+                if (f_label.FindAttribute(TDataStd_Name::GetID(), nameAttr))
+                    faceItem->SetName(new TCollection_HAsciiString(nameAttr->Get()));
+            }
         }
     }
+
+    auto writeResult = writer.Write(out_path.c_str());
+
+    return writeResult == IFSelect_RetDone;
 }
