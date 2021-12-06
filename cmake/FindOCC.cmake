@@ -118,6 +118,28 @@ foreach (OCC_LIB ${OCC_LIBRARIES_MODELING_ALGO})
   mark_as_advanced("${OCC_${OCC_LIB}}")
 endforeach()
 
+set(OCC_LIBRARIES_APP_FRAMEWORK
+  TKBin
+  TKBinL
+  TKBinTObj
+  TKCAF
+  TKCDF
+  TKLCAF
+  TKStd
+  TKStdL
+  TKTObj
+  TKVCAF
+  TKXml
+  TKXmlL
+  TKXmlTObj
+)
+
+foreach (OCC_LIB ${OCC_LIBRARIES_APP_FRAMEWORK})
+  find_library(OCC_${OCC_LIB} NAMES ${OCC_LIB} PATHS ${OCC_LIBRARY_DIR} NO_CACHE NO_DEFAULT_PATH)
+  list(APPEND OCC_LIBRARIES "${OCC_${OCC_LIB}}")
+  mark_as_advanced("${OCC_${OCC_LIB}}")
+endforeach()
+
 # handle the QUIETLY and REQUIRED arguments and set OCC_FOUND to TRUE if
 # all listed variables are TRUE
 
