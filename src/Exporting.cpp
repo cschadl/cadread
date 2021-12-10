@@ -18,6 +18,7 @@
 #include <StepShape_Face.hxx>
 #include <StepShape_ConnectedFaceSet.hxx>
 #include <StepRepr_RepresentationItem.hxx>
+#include <StepRepr_Representation.hxx>
 #include <TCollection_HAsciiString.hxx>
 #include <TDF_Label.hxx>
 #include <TDF_LabelSequence.hxx>
@@ -106,20 +107,24 @@ bool cadread::ExportSTEPXDE(Handle(TDocStd_Document) doc, std::filesystem::path 
     for (TDF_Label const& label_S : shapeLabels)
     {
         TopoDS_Shape S = shape_tool->GetShape(label_S);
-        auto shapeMapper = TransferBRep::ShapeMapper(fp, S);
 
         for (TopoDS_Face const& f : brep_utils::get_topo<TopoDS_Face>(S))
         {
+            auto shapeMapper = TransferBRep::ShapeMapper(fp, f);
             TDF_Label f_label = shape_tool->FindShape(f);
+            if (f_label.IsNull())
+                continue;
 
-            Handle(StepRepr_RepresentationItem) faceItem;
-            if (!f_label.IsNull() && 
-                fp->FindTypedTransient(
-                    shapeMapper, STANDARD_TYPE(StepRepr_RepresentationItem), faceItem))
+            Handle(Standard_Transient) faceEntity = fp->FindElseBind(shapeMapper);
+            if (!faceEntity.IsNull())
             {
-                Handle(TDataStd_Name) nameAttr(new TDataStd_Name);
-                if (f_label.FindAttribute(TDataStd_Name::GetID(), nameAttr))
-                    faceItem->SetName(new TCollection_HAsciiString(nameAttr->Get()));
+                auto faceItem = Handle(StepRepr_RepresentationItem)::DownCast(faceEntity);
+                if (!faceItem.IsNull())
+                {
+                    Handle(TDataStd_Name) nameAttr(new TDataStd_Name);
+                    if (f_label.FindAttribute(TDataStd_Name::GetID(), nameAttr))
+                        faceItem->SetName(new TCollection_HAsciiString(nameAttr->Get()));
+                }
             }
         }
     }

@@ -16,6 +16,10 @@
 #include <TopoDS_Shape.hxx>
 #include <Message_ProgressIndicator.hxx>
 #include <Standard_Version.hxx>
+#include <XCAFApp_Application.hxx>
+#include <TDocStd_Document.hxx>
+#include <XCAFDoc_ShapeTool.hxx>
+#include <XCAFDoc_DocumentTool.hxx>
 
 #include "Importing.h"
 #include "Exporting.h"
@@ -141,7 +145,17 @@ int main(int argc, char** argv)
 	}
 	else if (output_ext == ".stp" || output_ext == ".step")
 	{
-		if (!cadread::ExportSTEP(brep, output_path))
+		auto app = XCAFApp_Application::GetApplication();
+
+		Handle(TDocStd_Document) doc;
+		app->NewDocument("MDTV-XCAF", doc);
+
+		auto shapeTool = XCAFDoc_DocumentTool::ShapeTool(doc->Main());
+		shapeTool->AddShape(brep);
+
+		cadread::TagFaces(doc);
+		
+		if (!cadread::ExportSTEPXDE(doc, output_path))
 		{
 			std::cerr << "Error exporting STEP file" << std::endl;
 			return 1;

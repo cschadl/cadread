@@ -169,15 +169,12 @@ void cadread::TagFaces(Handle(TDocStd_Document) doc)
 	int i = 0;
 	for (TDF_Label & label : shapeLabels)
 	{
-		TopoDS_Shape S;
-		TDF_Label S_Label = shape_tool->FindShape(S);
-		if (S_Label.IsNull())
-			continue;
+		TopoDS_Shape S = shape_tool->GetShape(label);
 
 		auto faces = brep_utils::get_topo<TopoDS_Face>(S);
 		for (TopoDS_Face & f : faces)
 		{
-			TDF_Label fLabel = shape_tool->AddSubShape(S_Label, f);
+			TDF_Label fLabel = shape_tool->AddSubShape(label, f);
 
 			std::ostringstream oss;
 			oss << "face_" << (i++);
