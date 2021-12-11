@@ -18,10 +18,10 @@ typedef std::pair<bool, TopoDS_Shape> cad_read_result_t;
 
 struct brep_mesh_params
 {
-	double linear_deflection;		// Linear deflection
-	bool use_relative_discretization;
-	double angle_deflection_rad;	// Angular deflection in radians
-	bool use_parallel_meshing;
+    double linear_deflection;           // Linear deflection
+    bool use_relative_discretization;
+    double angle_deflection_rad;        // Angular deflection in radians
+    bool use_parallel_meshing;
 };
 
 namespace cadread

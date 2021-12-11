@@ -46,28 +46,28 @@ bool cadread::ExportSTEP(TopoDS_Shape const& shape, std::filesystem::path const&
 
     auto model = WS->Model();
     auto nEntities = model->NbEntities();
-	for (Standard_Integer i = 1 ; i <= nEntities ; i++)
-	{
-		auto entity = model->Value(i);
-		auto stepEntity = Handle(StepRepr_Representation)::DownCast(entity);
-		if (!stepEntity.IsNull())
-		{
+    for (Standard_Integer i = 1 ; i <= nEntities ; i++)
+    {
+        auto entity = model->Value(i);
+        auto stepEntity = Handle(StepRepr_Representation)::DownCast(entity);
+        if (!stepEntity.IsNull())
+        {
             for (Standard_Integer j = 1 ; j <= stepEntity->NbItems() ; j++)
             {
                 auto stepReprItem = stepEntity->ItemsValue(j);
 
                 // If this is a solid then get the faces
-				auto manifoldSolidBrep = 
-					Handle(StepShape_ManifoldSolidBrep)::DownCast(stepReprItem);
+                auto manifoldSolidBrep = 
+                    Handle(StepShape_ManifoldSolidBrep)::DownCast(stepReprItem);
 
-				if (!manifoldSolidBrep.IsNull())
-				{
-					auto outerFaceSet = manifoldSolidBrep->Outer();
-					
-					for (Standard_Integer k = 1 ; k < outerFaceSet->NbCfsFaces() ; k++)
-					{
+                if (!manifoldSolidBrep.IsNull())
+                {
+                    auto outerFaceSet = manifoldSolidBrep->Outer();
+                    
+                    for (Standard_Integer k = 1 ; k < outerFaceSet->NbCfsFaces() ; k++)
+                    {
                         // Assign a name to each face
-						auto face = outerFaceSet->CfsFacesValue(k);
+                        auto face = outerFaceSet->CfsFacesValue(k);
                         
                         std::ostringstream oss;
                         oss << "FACE" << k;
@@ -100,7 +100,7 @@ bool cadread::ExportSTEPXDE(Handle(TDocStd_Document) doc, std::filesystem::path 
     writer.Transfer(doc);
 
     TDF_LabelSequence shapeLabels;
-	shape_tool->GetFreeShapes(shapeLabels);
+    shape_tool->GetFreeShapes(shapeLabels);
 
     auto fp = WS->TransferWriter()->FinderProcess();
 

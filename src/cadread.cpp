@@ -39,130 +39,130 @@ namespace fs = std::filesystem;
 
 double deg_to_rad(double r)
 {
-	return r * M_PI / 180.0;
+    return r * M_PI / 180.0;
 }
 
 int main(int argc, char** argv)
 {
-	brep_mesh_params mesh_params;
+    brep_mesh_params mesh_params;
 
-	double angular_deflection_deg;
+    double angular_deflection_deg;
 
-	po::options_description options("Options");
-	options.add_options()
-		(INPUT_FILE_ARG",i", po::value<string>(), "Input CAD file")
-		(OUTPUT_FILE_ARG",o", po::value<string>(), "Output STL file")
-		(LINEAR_DEFLECTION_ARG",d", po::value<double>(&(mesh_params.linear_deflection))->default_value(0), 
-		 								"Linear deflection, 0 automatically computes value")
-		(ANGULAR_DEFLECTION_ARG",a", po::value<double>(&angular_deflection_deg)->default_value(30), 
-		 								 "Angular deflection in degrees")
-		(RELATIVE_ARG, "Use relative discretization during meshing")
-		(NO_PARALLEL_ARG, "Do not use multiple threads for building mesh")
-		(HELP_ARG",h", "Print help");
+    po::options_description options("Options");
+    options.add_options()
+        (INPUT_FILE_ARG",i", po::value<string>(), "Input CAD file")
+        (OUTPUT_FILE_ARG",o", po::value<string>(), "Output STL file")
+        (LINEAR_DEFLECTION_ARG",d", po::value<double>(&(mesh_params.linear_deflection))->default_value(0), 
+                                         "Linear deflection, 0 automatically computes value")
+        (ANGULAR_DEFLECTION_ARG",a", po::value<double>(&angular_deflection_deg)->default_value(30), 
+                                          "Angular deflection in degrees")
+        (RELATIVE_ARG, "Use relative discretization during meshing")
+        (NO_PARALLEL_ARG, "Do not use multiple threads for building mesh")
+        (HELP_ARG",h", "Print help");
 
-	po::positional_options_description pos_options;
-	pos_options.add(INPUT_FILE_ARG, 1);
+    po::positional_options_description pos_options;
+    pos_options.add(INPUT_FILE_ARG, 1);
 
-	po::variables_map vm;
-	po::store(
-		po::command_line_parser(argc, argv)
-			.options(options)
-			.positional(pos_options)
-			.run(),
-		vm);
-	po::notify(vm);
+    po::variables_map vm;
+    po::store(
+        po::command_line_parser(argc, argv)
+            .options(options)
+            .positional(pos_options)
+            .run(),
+        vm);
+    po::notify(vm);
 
-	if (!vm.count(INPUT_FILE_ARG) || !vm.count(OUTPUT_FILE_ARG) || vm.count("help"))
-	{
-		cout << "cadread built with OpenCascade version " << string(OCC_VERSION_COMPLETE) << endl << endl;
-		cout << "Usage: " << string(argv[0]) << " <input file> <output file> [options]" << endl;
-		cout << options << endl;
+    if (!vm.count(INPUT_FILE_ARG) || !vm.count(OUTPUT_FILE_ARG) || vm.count("help"))
+    {
+        cout << "cadread built with OpenCascade version " << string(OCC_VERSION_COMPLETE) << endl << endl;
+        cout << "Usage: " << string(argv[0]) << " <input file> <output file> [options]" << endl;
+        cout << options << endl;
 
-		return 0;
-	}
+        return 0;
+    }
 
-	string input_path_str = vm[INPUT_FILE_ARG].as<string>();
-	string output_path_str = vm[OUTPUT_FILE_ARG].as<string>();
+    string input_path_str = vm[INPUT_FILE_ARG].as<string>();
+    string output_path_str = vm[OUTPUT_FILE_ARG].as<string>();
 
-	fs::path input_path(input_path_str);
-	fs::path output_path(output_path_str);
+    fs::path input_path(input_path_str);
+    fs::path output_path(output_path_str);
 
-	string in_ext = input_path.extension().string();
-	transform(in_ext.begin(), in_ext.end(), in_ext.begin(), ::tolower);
+    string in_ext = input_path.extension().string();
+    transform(in_ext.begin(), in_ext.end(), in_ext.begin(), ::tolower);
 
-	mesh_params.angle_deflection_rad = ::deg_to_rad(angular_deflection_deg);
-	mesh_params.use_relative_discretization = !!vm.count(RELATIVE_ARG);
-	mesh_params.use_parallel_meshing = !vm.count(NO_PARALLEL_ARG);
+    mesh_params.angle_deflection_rad = ::deg_to_rad(angular_deflection_deg);
+    mesh_params.use_relative_discretization = !!vm.count(RELATIVE_ARG);
+    mesh_params.use_parallel_meshing = !vm.count(NO_PARALLEL_ARG);
 
-	Handle(Message_ProgressIndicator) indicator(new cadread_ConsoleProgressIndicator(1));
+    Handle(Message_ProgressIndicator) indicator(new cadread_ConsoleProgressIndicator(1));
 
-	cad_read_result_t read_result;
-	if (in_ext == ".stp" || in_ext == ".step")
-		read_result = cadread::ReadSTEP(input_path.string(), indicator);
-	else if (in_ext == ".igs" || in_ext == ".iges")
-		read_result = cadread::ReadIGES(input_path.string(), indicator);
-	else
-	{
-		cout << "Unknown input file type: " << in_ext << endl;
-		return 1;
-	}
+    cad_read_result_t read_result;
+    if (in_ext == ".stp" || in_ext == ".step")
+        read_result = cadread::ReadSTEP(input_path.string(), indicator);
+    else if (in_ext == ".igs" || in_ext == ".iges")
+        read_result = cadread::ReadIGES(input_path.string(), indicator);
+    else
+    {
+        cout << "Unknown input file type: " << in_ext << endl;
+        return 1;
+    }
 
-	if (!read_result.first)
-	{
-		cout << "Error loading input file" << endl;
-		return 1;
-	}
+    if (!read_result.first)
+    {
+        cout << "Error loading input file" << endl;
+        return 1;
+    }
 
-	const TopoDS_Shape& brep = read_result.second;
-	if (brep.IsNull())
-	{
-		cout << "Got empty BRep!" << endl;
-		return 1;
-	}
+    const TopoDS_Shape& brep = read_result.second;
+    if (brep.IsNull())
+    {
+        cout << "Got empty BRep!" << endl;
+        return 1;
+    }
 
-	auto output_ext = output_path.extension().string();
-	std::transform(output_ext.begin(), output_ext.end(), output_ext.begin(), ::tolower);
+    auto output_ext = output_path.extension().string();
+    std::transform(output_ext.begin(), output_ext.end(), output_ext.begin(), ::tolower);
 
-	if (output_ext == ".stl")
-	{
-		unique_ptr<triangle_mesh> mesh = cadread::tessellate_BRep(brep, mesh_params);
-		if (!mesh)
-		{
-			cout << "Error creating mesh from BRep!" << endl;
-			return 1;
-		}
+    if (output_ext == ".stl")
+    {
+        unique_ptr<triangle_mesh> mesh = cadread::tessellate_BRep(brep, mesh_params);
+        if (!mesh)
+        {
+            cout << "Error creating mesh from BRep!" << endl;
+            return 1;
+        }
 
-		// Just write a ASCII STL file for now...
-		ofstream out_stream;
-		out_stream.open(output_path.string().c_str(), ios::out | ios::trunc);
-		if (!out_stream.good())
-		{
-			cout << "Error opening output stream" << endl;
-			return 1;
-		}
+        // Just write a ASCII STL file for now...
+        ofstream out_stream;
+        out_stream.open(output_path.string().c_str(), ios::out | ios::trunc);
+        if (!out_stream.good())
+        {
+            cout << "Error opening output stream" << endl;
+            return 1;
+        }
 
-		out_stream << *mesh;
-	}
-	else if (output_ext == ".stp" || output_ext == ".step")
-	{
-		auto app = XCAFApp_Application::GetApplication();
+        out_stream << *mesh;
+    }
+    else if (output_ext == ".stp" || output_ext == ".step")
+    {
+        auto app = XCAFApp_Application::GetApplication();
 
-		Handle(TDocStd_Document) doc;
-		app->NewDocument("MDTV-XCAF", doc);
+        Handle(TDocStd_Document) doc;
+        app->NewDocument("MDTV-XCAF", doc);
 
-		auto shapeTool = XCAFDoc_DocumentTool::ShapeTool(doc->Main());
-		shapeTool->AddShape(brep);
+        auto shapeTool = XCAFDoc_DocumentTool::ShapeTool(doc->Main());
+        shapeTool->AddShape(brep);
 
-		cadread::TagFaces(doc);
-		
-		if (!cadread::ExportSTEPXDE(doc, output_path))
-		{
-			std::cerr << "Error exporting STEP file" << std::endl;
-			return 1;
-		}
-	}
+        cadread::TagFaces(doc);
+        
+        if (!cadread::ExportSTEPXDE(doc, output_path))
+        {
+            std::cerr << "Error exporting STEP file" << std::endl;
+            return 1;
+        }
+    }
 
-	cout << "Done!" << endl;
+    cout << "Done!" << endl;
 
-	return 0;
+    return 0;
 }
