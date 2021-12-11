@@ -27,6 +27,7 @@
 #include <TransferBRep_ShapeMapper.hxx>
 #include <TDataStd_Name.hxx>
 #include <TDF_Attribute.hxx>
+#include <Interface_Static.hxx>
 
 bool cadread::ExportSTEP(TopoDS_Shape const& shape, std::filesystem::path const& out_path)
 {
@@ -91,43 +92,13 @@ bool cadread::ExportSTEPXDE(Handle(TDocStd_Document) doc, std::filesystem::path 
         std::cerr << "Document must be an XCAF doc" << std::endl;
         return false;
     }
-
-    auto shape_tool = XCAFDoc_DocumentTool::ShapeTool(doc->Main());
+    
+    Interface_Static::SetIVal("write.stepcaf.subshapes.name", 1);
 
     Handle(XSControl_WorkSession) WS(new XSControl_WorkSession);
     STEPCAFControl_Writer writer;
 
     writer.Transfer(doc);
-
-    TDF_LabelSequence shapeLabels;
-    shape_tool->GetFreeShapes(shapeLabels);
-
-    auto fp = WS->TransferWriter()->FinderProcess();
-
-    for (TDF_Label const& label_S : shapeLabels)
-    {
-        TopoDS_Shape S = shape_tool->GetShape(label_S);
-
-        for (TopoDS_Face const& f : brep_utils::get_topo<TopoDS_Face>(S))
-        {
-            auto shapeMapper = TransferBRep::ShapeMapper(fp, f);
-            TDF_Label f_label = shape_tool->FindShape(f);
-            if (f_label.IsNull())
-                continue;
-
-            Handle(Standard_Transient) faceEntity = fp->FindElseBind(shapeMapper);
-            if (!faceEntity.IsNull())
-            {
-                auto faceItem = Handle(StepRepr_RepresentationItem)::DownCast(faceEntity);
-                if (!faceItem.IsNull())
-                {
-                    Handle(TDataStd_Name) nameAttr(new TDataStd_Name);
-                    if (f_label.FindAttribute(TDataStd_Name::GetID(), nameAttr))
-                        faceItem->SetName(new TCollection_HAsciiString(nameAttr->Get()));
-                }
-            }
-        }
-    }
 
     auto writeResult = writer.Write(out_path.c_str());
 
