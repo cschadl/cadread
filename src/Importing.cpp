@@ -166,10 +166,10 @@ void cadread::TagShapes(Handle(TDocStd_Document) doc)
     TDF_LabelSequence shapeLabels;
     shape_tool->GetFreeShapes(shapeLabels);
 
-        int solid_idx = 0;
+    int solid_idx = 0;
     int i = 0;
     for (TDF_Label & S_label : shapeLabels)
-        {
+    {
         std::ostringstream s_oss;
         s_oss << "solid_" << (solid_idx++);
 
