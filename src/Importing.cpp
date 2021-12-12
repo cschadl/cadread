@@ -51,8 +51,11 @@ cad_read_result_t cadread::read_cad_file(XSControl_Reader& reader,
 		return make_pair(false, TopoDS_Shape());
 	}
 
-    Message_ProgressScope transfer_scope(range, "Importing...", 100.);
+    Message_ProgressScope transfer_scope(range, TCollection_AsciiString("Importing..."), 1.);
+	transfer_scope.Show();
 	reader.TransferRoots(transfer_scope.Next());
+
+	transfer_scope.Close();
 
 	return make_pair(true, reader.OneShape());
 }
@@ -63,8 +66,8 @@ cad_read_result_t cadread::ReadSTEP(const string& filename, Message_ProgressRang
 	cad_read_result_t res = read_cad_file(reader, filename, range);
 
 	const TopoDS_Shape& shape = res.second;
-	if (!shape.IsNull())
-		res.second = heal_BRep(shape, range);
+	// if (!shape.IsNull())
+	// 	res.second = heal_BRep(shape, range);
 
 	return res;
 }

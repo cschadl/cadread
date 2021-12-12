@@ -18,6 +18,13 @@ void cadread_ConsoleProgressIndicator::Show(
     Message_ProgressScope const& scope,
     const Standard_Boolean force /* = Standard_False */)
 {
+    if (!scope.IsActive() && !force)
+        return;
+
+    auto name = scope.Name();
+    if (!name)
+        return;
+
 	double const pc = GetPosition() * 100;
 
 	printf("%s : %.*f%%\n\033[F\033[J", scope.Name(), precision(), pc);
