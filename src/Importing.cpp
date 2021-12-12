@@ -6,7 +6,8 @@
 #include <XSControl_WorkSession.hxx>
 #include <XSControl_TransferReader.hxx>
 #include <Transfer_TransientProcess.hxx>
-#include <Message_ProgressIndicator.hxx>
+#include <Message_ProgressRange.hxx>
+#include <Message_ProgressScope.hxx>
 #include <TopoDS.hxx>
 #include <BRepMesh_IncrementalMesh.hxx>
 #include <TopExp_Explorer.hxx>
@@ -40,71 +41,47 @@
 
 using namespace std;
 
-cad_read_result_t cadread::read_cad_file(XSControl_Reader& reader, const string& filename, Handle(Message_ProgressIndicator) indicator)
+cad_read_result_t cadread::read_cad_file(XSControl_Reader& reader,
+    const string& filename, Message_ProgressRange& range)
 {
-	if (!indicator.IsNull())
-	{
-		//auto ws = reader.WS();
-		//ws->MapReader()->SetProgress(indicator);
-
-		indicator->SetScale("Reading CAD file", 0.0, 100.0, 1.0);
-		indicator->NewScope(20, "Reading");
-
-		indicator->Show();
-	}
-
 	IFSelect_ReturnStatus res = reader.ReadFile(filename.c_str());
-
-	if (!indicator.IsNull())
-		indicator->EndScope();
 
 	if (res != IFSelect_RetDone)
 	{
 		return make_pair(false, TopoDS_Shape());
 	}
 
-	if (!indicator.IsNull())
-	{
-		auto ws = reader.WS();
-		ws->TransferReader()->TransientProcess()->SetProgress(indicator);
-
-		indicator->NewScope(80, "Importing");
-		indicator->Show();
-	}
-
-	reader.TransferRoots();
-
-	if (!indicator.IsNull())
-		indicator->EndScope();
+    Message_ProgressScope transfer_scope(range, "Importing...", 100.);
+	reader.TransferRoots(transfer_scope.Next());
 
 	return make_pair(true, reader.OneShape());
 }
 
-cad_read_result_t cadread::ReadSTEP(const string& filename, Handle(Message_ProgressIndicator) progress_indicator)
+cad_read_result_t cadread::ReadSTEP(const string& filename, Message_ProgressRange& range)
 {
 	STEPControl_Reader reader;
-	cad_read_result_t res = read_cad_file(reader, filename, progress_indicator);
+	cad_read_result_t res = read_cad_file(reader, filename, range);
 
 	const TopoDS_Shape& shape = res.second;
 	if (!shape.IsNull())
-		res.second = heal_BRep(shape, progress_indicator);
+		res.second = heal_BRep(shape, range);
 
 	return res;
 }
 
-cad_read_result_t cadread::ReadIGES(const string& filename, Handle(Message_ProgressIndicator) progress_indicator)
+cad_read_result_t cadread::ReadIGES(const string& filename, Message_ProgressRange& range)
 {
 	IGESControl_Reader reader;
-	cad_read_result_t res = read_cad_file(reader, filename, progress_indicator);
+	cad_read_result_t res = read_cad_file(reader, filename, range);
 
 	const TopoDS_Shape& shape = res.second;
 	if (!shape.IsNull())
-		res.second = heal_BRep(shape, progress_indicator);
+		res.second = heal_BRep(shape, range);
 
 	return res;
 }
 
-TopoDS_Shape cadread::heal_BRep(const TopoDS_Shape& shape, Handle(Message_ProgressIndicator) indicator)
+TopoDS_Shape cadread::heal_BRep(const TopoDS_Shape& shape, Message_ProgressRange& /* range */)
 {
 	Handle(ShapeFix_Shape) shape_fix(new ShapeFix_Shape);
 	shape_fix->Init(shape);
@@ -126,26 +103,26 @@ TopoDS_Shape cadread::heal_BRep(const TopoDS_Shape& shape, Handle(Message_Progre
 	shape_fix->SetMinTolerance(min_vert_tolerance);
 	shape_fix->SetMaxTolerance(max_vert_tolerance);
 
-	if (!indicator.IsNull())
-	{
-		indicator->Reset();
-		indicator->SetScale("Healing", 0, 100, 1);
-		indicator->NewScope(50, "Fixing shape");
-	}
+	// if (!indicator.IsNull())
+	// {
+	// 	indicator->Reset();
+	// 	indicator->SetScale("Healing", 0, 100, 1);
+	// 	indicator->NewScope(50, "Fixing shape");
+	// }
 
-	shape_fix->Perform(indicator);
+	shape_fix->Perform();
 	TopoDS_Shape fixed_shape = shape_fix->Shape();
 
-	if (!indicator.IsNull())
-	{
-		indicator->EndScope();
-		indicator->NewScope(50, "Fixing wires");
-	}
+	// if (!indicator.IsNull())
+	// {
+	// 	indicator->EndScope();
+	// 	indicator->NewScope(50, "Fixing wires");
+	// }
 
 	BRepTools_ReShape reshaper;
 	for (const TopoDS_Face& face : brep_utils::get_topo<TopoDS_Face>(fixed_shape))
 	{
-		stlutil::finally f([&indicator]() { indicator->Increment(); });
+		//stlutil::finally f([&indicator]() { indicator->Increment(); });
 
 		BRepCheck_Analyzer face_analyzer(face);
 		if (face_analyzer.IsValid())
@@ -257,18 +234,15 @@ unique_ptr<triangle_mesh> cadread::tessellate_BRep(const TopoDS_Shape& shape, br
 		if (face_triangulation.IsNull())
 			continue;
 
-		const Poly_Array1OfTriangle& face_triangles = face_triangulation->Triangles();
-		const TColgp_Array1OfPnt& face_nodes = face_triangulation->Nodes();
-
 		for (Standard_Integer i = 1 ; i <= face_triangulation->NbTriangles() ; i++)
 		{
 			Standard_Integer i1, i2, i3;
-			const Poly_Triangle& ft = face_triangles.Value(i);
+			const Poly_Triangle& ft = face_triangulation->Triangle(i);
 			ft.Get(i1, i2, i3);
 
-			gp_Pnt t_p1 = face_nodes.Value(!face_reversed ? i1 : i2).Transformed(face_location);
-			gp_Pnt t_p2 = face_nodes.Value(!face_reversed ? i2 : i1).Transformed(face_location);
-			gp_Pnt t_p3 = face_nodes.Value(i3).Transformed(face_location);
+			gp_Pnt t_p1 = face_triangulation->Node(!face_reversed ? i1 : i2).Transformed(face_location);
+			gp_Pnt t_p2 = face_triangulation->Node(!face_reversed ? i2 : i1).Transformed(face_location);
+			gp_Pnt t_p3 = face_triangulation->Node(i3).Transformed(face_location);
 
 			maths::triangle3d t(maths::vector3d(t_p1.X(), t_p1.Y(), t_p1.Z()),
 								maths::vector3d(t_p2.X(), t_p2.Y(), t_p2.Z()),

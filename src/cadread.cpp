@@ -91,11 +91,13 @@ int main(int argc, char** argv)
 
 	Handle(Message_ProgressIndicator) indicator(new cadread_ConsoleProgressIndicator(1));
 
+    Message_ProgressRange range = indicator->Start();
+
 	cad_read_result_t read_result;
 	if (in_ext == ".stp" || in_ext == ".step")
-		read_result = cadread::ReadSTEP(input_path.string(), indicator);
+		read_result = cadread::ReadSTEP(input_path.string(), range);
 	else if (in_ext == ".igs" || in_ext == ".iges")
-		read_result = cadread::ReadIGES(input_path.string(), indicator);
+		read_result = cadread::ReadIGES(input_path.string(), range);
 	else
 	{
 		cout << "Unknown input file type: " << in_ext << endl;

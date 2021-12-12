@@ -14,12 +14,11 @@ cadread_ConsoleProgressIndicator::cadread_ConsoleProgressIndicator(int precision
 
 }
 
-Standard_Boolean cadread_ConsoleProgressIndicator::Show(const Standard_Boolean force /* = Standard_False */)
+void cadread_ConsoleProgressIndicator::Show(
+    Message_ProgressScope const& scope,
+    const Standard_Boolean force /* = Standard_False */)
 {
 	double const pc = GetPosition() * 100;
-	Standard_Integer const n_scopes = GetNbScopes();
 
-	printf("%s : %.*f%%\n\033[F\033[J", GetScope(n_scopes).GetName()->ToCString(), precision(), pc);
-
-	return Standard_True;
+	printf("%s : %.*f%%\n\033[F\033[J", scope.Name(), precision(), pc);
 }

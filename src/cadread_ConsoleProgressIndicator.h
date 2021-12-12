@@ -13,7 +13,8 @@ public:
 
 	int precision() const { return m_precision; }
 
-	Standard_Boolean Show(const Standard_Boolean force = Standard_True) override;
+	void Show(const Message_ProgressScope& scope,
+              const Standard_Boolean force = Standard_True) override;
 };
 
 #endif
