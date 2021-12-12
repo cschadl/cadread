@@ -5,6 +5,7 @@
 #include <TopoDS_Edge.hxx>
 #include <TopoDS_Face.hxx>
 #include <TopoDS_Wire.hxx>
+#include <TopoDS_Solid.hxx>
 #include <TopExp_Explorer.hxx>
 
 #include <type_traits>
@@ -46,6 +47,14 @@ namespace brep_utils
         static constexpr TopAbs_ShapeEnum shape_type() { return TopAbs_WIRE; }
 
         static constexpr const TopoDS_Wire& (*shape_fn)(const TopoDS_Shape&) = &TopoDS::Wire;
+    };
+
+    template <>
+    struct shape_traits<TopoDS_Solid>
+    {
+        static constexpr TopAbs_ShapeEnum shape_type() { return TopAbs_SOLID; }
+
+        static constexpr const TopoDS_Solid& (*shape_fn)(const TopoDS_Shape&) = &TopoDS::Solid;
     };
 
     template <typename TopoShapeType>
