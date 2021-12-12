@@ -48,12 +48,17 @@ set(OCC_LIBRARIES_FOUNDATION
   TKernel
 )
 
+set(OCC_LIB_PATH_SUFFIX "lib")
+if (LINK_OCC_DEBUG)
+  set(OCC_LIB_PATH_SUFFIX "lib/debug")
+endif(LINK_OCC_DEBUG)
+
 set(OCC_LIBRARIES "")
 foreach (OCC_LIB ${OCC_LIBRARIES_FOUNDATION})
   if (NOT CASROOT)
     find_library(OCC_${OCC_LIB} NAMES ${OCC_LIB} PATHS} NO_CACHE)
   else()
-    find_library(OCC_${OCC_LIB} NAMES ${OCC_LIB} PATHS ${CASROOT} PATH_SUFFIXES lib bin NO_DEFAULT_PATH)
+    find_library(OCC_${OCC_LIB} NAMES ${OCC_LIB} PATHS ${CASROOT} PATH_SUFFIXES ${OCC_LIB_PATH_SUFFIX} NO_DEFAULT_PATH)
   endif()
   list(APPEND OCC_LIBRARIES "${OCC_${OCC_LIB}}")
   mark_as_advanced("${OCC_${OCC_LIB}}")
