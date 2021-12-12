@@ -32,7 +32,7 @@ cad_read_result_t read_cad_file(XSControl_Reader& reader, const std::string& fil
 cad_read_result_t ReadSTEP(const std::string& filename, Handle(Message_ProgressIndicator) progress_indicator);
 cad_read_result_t ReadIGES(const std::string& filename, Handle(Message_ProgressIndicator) progress_indicator);
 
-void TagFaces(Handle(TDocStd_Document) shapeDoc);
+void TagShapes(Handle(TDocStd_Document) shapeDoc);
 
 Standard_Real compute_optimal_linear_deflection(const TopoDS_Shape& shape);
 

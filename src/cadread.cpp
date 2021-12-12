@@ -153,7 +153,7 @@ int main(int argc, char** argv)
         auto shapeTool = XCAFDoc_DocumentTool::ShapeTool(doc->Main());
         shapeTool->AddShape(brep);
 
-        cadread::TagFaces(doc);
+        cadread::TagShapes(doc);
         
         if (!cadread::ExportSTEPXDE(doc, output_path))
         {

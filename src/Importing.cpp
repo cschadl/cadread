@@ -159,17 +159,17 @@ cad_read_result_t cadread::ReadIGES(const string& filename, Handle(Message_Progr
     return res;
 }
 
-void cadread::TagFaces(Handle(TDocStd_Document) doc)
+void cadread::TagShapes(Handle(TDocStd_Document) doc)
 {
     auto shape_tool = XCAFDoc_DocumentTool::ShapeTool(doc->Main());
     
     TDF_LabelSequence shapeLabels;
     shape_tool->GetFreeShapes(shapeLabels);
 
-    int solid_idx = 0;
+        int solid_idx = 0;
     int i = 0;
     for (TDF_Label & S_label : shapeLabels)
-    {
+        {
         std::ostringstream s_oss;
         s_oss << "solid_" << (solid_idx++);
 
@@ -178,7 +178,7 @@ void cadread::TagFaces(Handle(TDocStd_Document) doc)
 
         auto faces = brep_utils::get_topo<TopoDS_Face>(S);
         for (TopoDS_Face & f : faces)
-        {
+            {
             TDF_Label fLabel = shape_tool->AddSubShape(S_label, f);
 
             std::ostringstream oss;
