@@ -51,11 +51,11 @@ cad_read_result_t cadread::read_cad_file(XSControl_Reader& reader,
 		return make_pair(false, TopoDS_Shape());
 	}
 
-    Message_ProgressScope transfer_scope(range, TCollection_AsciiString("Importing..."), 1.);
-	transfer_scope.Show();
-	reader.TransferRoots(transfer_scope.Next());
+    //Message_ProgressScope transfer_scope(range, TCollection_AsciiString("Importing..."), 1.);
+	//transfer_scope.Show();
+	reader.TransferRoots(/*transfer_scope.Next()*/);
 
-	transfer_scope.Close();
+	//transfer_scope.Close();
 
 	return make_pair(true, reader.OneShape());
 }
@@ -84,8 +84,11 @@ cad_read_result_t cadread::ReadIGES(const string& filename, Message_ProgressRang
 	return res;
 }
 
-TopoDS_Shape cadread::heal_BRep(const TopoDS_Shape& shape, Message_ProgressRange& /* range */)
+TopoDS_Shape cadread::heal_BRep(const TopoDS_Shape& shape, Message_ProgressRange& range)
 {
+	Message_ProgressScope heal_scope(range, TCollection_AsciiString("Healing shapes..."), 1.);
+	heal_scope.Show();
+
 	Handle(ShapeFix_Shape) shape_fix(new ShapeFix_Shape);
 	shape_fix->Init(shape);
 
@@ -106,26 +109,18 @@ TopoDS_Shape cadread::heal_BRep(const TopoDS_Shape& shape, Message_ProgressRange
 	shape_fix->SetMinTolerance(min_vert_tolerance);
 	shape_fix->SetMaxTolerance(max_vert_tolerance);
 
-	// if (!indicator.IsNull())
-	// {
-	// 	indicator->Reset();
-	// 	indicator->SetScale("Healing", 0, 100, 1);
-	// 	indicator->NewScope(50, "Fixing shape");
-	// }
-
-	shape_fix->Perform();
+	shape_fix->Perform(heal_scope.Next(0.5));
 	TopoDS_Shape fixed_shape = shape_fix->Shape();
 
-	// if (!indicator.IsNull())
-	// {
-	// 	indicator->EndScope();
-	// 	indicator->NewScope(50, "Fixing wires");
-	// }
+	auto faces = brep_utils::get_topo<TopoDS_Face>(fixed_shape);
+	auto nbFaces = faces.Size();
+
+	Message_ProgressScope heal_wires_scope(heal_scope.Next(), "Healing wires...", 1.);
 
 	BRepTools_ReShape reshaper;
-	for (const TopoDS_Face& face : brep_utils::get_topo<TopoDS_Face>(fixed_shape))
+	for (const TopoDS_Face& face : faces)
 	{
-		//stlutil::finally f([&indicator]() { indicator->Increment(); });
+		heal_wires_scope.Next(1.0 / (Standard_Real) nbFaces);
 
 		BRepCheck_Analyzer face_analyzer(face);
 		if (face_analyzer.IsValid())
